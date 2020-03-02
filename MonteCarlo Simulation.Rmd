@@ -1,0 +1,48 @@
+
+Monte Carlo Simulation
+
+```{r}
+set.seed(13437885)
+n = 200 #Sample size is fixed
+m = 100 #Simulate error e, m times
+
+#Step 1 : Generate x1 & x2 for mean function 5 + 1.2x1 + 3x2
+x1 <- rnorm(n, mean = 2, sd = 0.4)
+x2 <- rnorm(n, mean = -1, sd = 0.1)
+coef <- c(5,1.2,3)
+
+#Step 2 : matrix & simulation
+betaMatrix <- matrix(NA,nrow = m, ncol = 3) #Output matrix initialization
+listMSE <- matrix(NA,nrow = m, ncol = 1)
+
+#Simulation
+for (j in 1:m){
+  e <- rnorm(n, mean=0, sd=1) #Simulate error m times
+  y <- coef[1] + coef[2]*x1 + coef[3]*x2 + e #response y
+  lm.output <- lm(y~x1+x2)
+  lm.summary <- summary(lm.output)
+  betaMatrix[j,] <- lm.output$coefficients
+  listMSE[j] <- lm.summary$sigma^2 #MSE per iteration
+}
+
+#Step 3 : compute MSE bias etc
+
+#Parameter mean estimates, parameter mean variance
+beta_mean <- round(apply(betaMatrix,2,mean),3) #Mean parameter estimates
+beta_var <- round(apply(betaMatrix,2,var),3) #Mean Variance
+beta_sd <- round(sqrt(beta_var),3)
+
+#Bias:
+bias <- round((beta_mean - coef),3)
+
+#MSE
+mse <- round(((bias^2) + beta_var),3)
+
+Parameters <- c("B0","B1","B2")
+finaltable <- cbind(Parameters, True_Value = coef, Estimate_Mean=beta_mean, Estimate_Variance= beta_var, Estimate_SD = beta_sd, Bias = bias, Estimate_MSE = mse)
+print(finaltable, quote = FALSE)
+
+#Mean Model MSE
+mean(listMSE)
+```
+
